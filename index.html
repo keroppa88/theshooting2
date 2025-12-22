@@ -844,8 +844,7 @@
       if (player.fireCooldown > 0) player.fireCooldown--;
 
       const wantShootKeyboard = keys["Space"] || keys["KeyJ"];
-      const pad2 = readGamepad();
-      const wantShootPad = pad2 && pad2.shoot;
+      const wantShootPad = pad && pad2.shoot;
 
       if ((wantShootKeyboard || wantShootPad) && player.fireCooldown === 0) {
         firePlayerShots();
@@ -976,7 +975,7 @@
 
             enemyBullets.push({ x: cx, y: cy, w: 4, h: 10, vx: -Math.sin(ang) * speed, vy: Math.cos(ang) * speed });
             enemyBullets.push({ x: cx, y: cy, w: 4, h: 10, vx:  Math.sin(ang) * speed, vy: Math.cos(ang) * speed });
-            e.shotTimer = 180;
+            e.shotTimer = 120;
           }
 
           if (e.y > canvas.height + 50) {
