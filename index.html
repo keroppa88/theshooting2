@@ -95,22 +95,36 @@
     }
 
     // ===== スクロール背景画像 =====
-    const backgroundImage = new Image();
-    backgroundImage.src = "Game/back.png";
-    let backgroundImageLoaded = false;
-    let backgroundScrollTriggered = false;
-    let backgroundScrollPending = false;
-    let backgroundScrollActive = false;
-    let backgroundScrollY = 0;
-    const backgroundScrollSpeed = 0.8;
-    const backgroundScrollScore = 1150;
 
-    backgroundImage.onload = () => {
-      backgroundImageLoaded = true;
-      if (backgroundScrollPending) {
-        startBackgroundScroll();
-      }
-    };
+    const backgroundScrollSpeed = 0.8;
+
+    function createBackgroundScroll(src, triggerScore) {
+      const image = new Image();
+      const state = {
+        image,
+        loaded: false,
+        triggered: false,
+        pending: false,
+        active: false,
+        y: -canvas.height,
+        triggerScore,
+      };
+
+      image.onload = () => {
+        state.loaded = true;
+        if (state.pending) {
+          startBackgroundScroll(state);
+        }
+      };
+
+      image.src = src;
+      return state;
+    }
+
+    const backgroundScrolls = [
+      createBackgroundScroll("Game/back.png", 1250),
+      createBackgroundScroll("Game/back2.png", 1750),
+    ];
 
     // ===== エンディング画像 =====
     const endingImage = new Image();
@@ -250,10 +264,19 @@
     // 爆発終了後の白フラッシュ
     let clearFlashTimer = 0; // >0 の間、白く点滅
 
-    function startBackgroundScroll() {
-      backgroundScrollY = -canvas.height;
-      backgroundScrollActive = true;
-      backgroundScrollPending = false;
+    function startBackgroundScroll(bg) {
+      bg.y = -canvas.height;
+      bg.active = true;
+      bg.pending = false;
+    }
+
+    function resetBackgroundScrolls() {
+      for (const bg of backgroundScrolls) {
+        bg.triggered = false;
+        bg.pending = false;
+        bg.active = false;
+        bg.y = -canvas.height;
+      }
     }
 
     const missileScorePoints = [500, 600, 700, 800, 900, 1000];
@@ -1457,26 +1480,29 @@
 
 
     function updateBackgroundScroll() {
-      if (!backgroundScrollTriggered && score >= backgroundScrollScore) {
-        backgroundScrollTriggered = true;
-        if (backgroundImageLoaded) {
-          startBackgroundScroll();
-        } else {
-          backgroundScrollPending = true;
+      for (const bg of backgroundScrolls) {
+        if (!bg.triggered && score >= bg.triggerScore) {
+          bg.triggered = true;
+          if (bg.loaded) {
+            startBackgroundScroll(bg);
+          } else {
+            bg.pending = true;
+          }
         }
-      }
 
-      if (!backgroundScrollActive) return;
-
-      backgroundScrollY += backgroundScrollSpeed;
-      if (backgroundScrollY >= canvas.height) {
-        backgroundScrollActive = false;
+        if (!bg.active) continue;
+        bg.y += backgroundScrollSpeed;
+        if (bg.y >= canvas.height) {
+          bg.active = false;
+        }
       }
     }
 
     function drawBackgroundScroll() {
-      if (!backgroundScrollActive || !backgroundImageLoaded) return;
-      ctx.drawImage(backgroundImage, 0, backgroundScrollY, canvas.width, canvas.height);
+      for (const bg of backgroundScrolls) {
+        if (!bg.active || !bg.loaded) continue;
+        ctx.drawImage(bg.image, 0, bg.y, canvas.width, canvas.height);
+      }
     }
 
 
@@ -1769,10 +1795,7 @@ function drawClearExplosionPhase() {
       finalBigExplosion = null;
       clearFlashTimer = 0;
 
-      backgroundScrollTriggered = false;
-      backgroundScrollPending = false;
-      backgroundScrollActive = false;
-      backgroundScrollY = -canvas.height;
+      resetBackgroundScrolls();
     }
 
     function backToTitle() {
@@ -1801,10 +1824,7 @@ function drawClearExplosionPhase() {
       finalBigExplosion = null;
       clearFlashTimer = 0;
 
-      backgroundScrollTriggered = false;
-      backgroundScrollPending = false;
-      backgroundScrollActive = false;
-      backgroundScrollY = -canvas.height;
+      resetBackgroundScrolls();
 
       gameStarted = false;
       gameOver = false;
