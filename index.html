@@ -229,10 +229,13 @@
     let clearFlashTimer = 0; // >0 の間、白く点滅
 
     const missileScorePoints = [500, 600, 700, 800, 900, 1000];
-    const starScorePoints    = [1000];
+    const starScorePoints         = [1000];
+    const doubleShotStarPoints    = [1450];
+    const doubleShotEndScore      = 1800;
     const missileSpawned = {};
     const starSpawned    = {};
-
+    const doubleShotStarSpawned = {};
+    
     // 入力
     const keys = {};
     document.addEventListener("keydown", e => {
@@ -306,7 +309,10 @@
     const enemyBullets = [];
     const explosions = [];
     const powerStars = [];
-
+    const doubleShotStars = [];
+    
+    let powerUpActive = false; 
+    let powerUpTimer  = 0;
     let doubleShotActive = false;
 
     let enemySpawnTimer = 0;
@@ -502,6 +508,16 @@
       });
     }
 
+    function spawnDoubleShotStar() {
+      const size = 20;
+      const x = Math.random() * (canvas.width - size);
+      const y = -size;
+      doubleShotStars.push({
+        x, y, size,
+        speed: 2.2
+      });
+    }
+
     function createBossAt(x) {
       const baseW = 30;
       const baseH = 30;
@@ -603,6 +619,14 @@
         if (!starSpawned[p] && score >= p) {
           spawnStar();
           starSpawned[p] = true;
+        }
+      }
+      if (score < doubleShotEndScore) {
+        for (const p of doubleShotStarPoints) {
+          if (!doubleShotStarSpawned[p] && score > p) {
+            spawnDoubleShotStar();
+            doubleShotStarSpawned[p] = true;
+          }
         }
       }
     }
@@ -739,12 +763,17 @@
     }
 
     function firePlayerShots() {
+      const baseAngles = powerUpActive ? [-20, 0, 20] : [0];
       if (doubleShotActive) {
         const offset = 8;
-        spawnPlayerBullet(0, -offset);
-        spawnPlayerBullet(0,  offset);
+        for (const ang of baseAngles) {
+          spawnPlayerBullet(ang, -offset);
+          spawnPlayerBullet(ang,  offset);
+        }
       } else {
-        spawnPlayerBullet(0);
+        for (const ang of baseAngles) {
+          spawnPlayerBullet(ang);
+        }
       }
       playSound(shootSound);
     }
@@ -822,8 +851,12 @@
         firePlayerShots();
         player.fireCooldown = 8;
       }
+      if (powerUpActive) {
+        powerUpTimer--;
+        if (powerUpTimer <= 0) powerUpActive = false;
+      }
 
-      if (doubleShotActive && score >= 1800) {
+      if (doubleShotActive && score >= doubleShotEndScore) {
         doubleShotActive = false;
       }
     }
@@ -1052,6 +1085,27 @@
         if (rectHit(player, rect)) {
           doubleShotActive = true;
           powerStars.splice(i, 1);
+          playSound(starSound);
+        }
+      }
+    }
+
+    function updateDoubleShotStars() {
+      if (score >= doubleShotEndScore) {
+        doubleShotStars.length = 0;
+        return;
+      }
+      for (let i = doubleShotStars.length - 1; i >= 0; i--) {
+        const s = doubleShotStars[i];
+        s.y += s.speed;
+        if (s.y > canvas.height) {
+          doubleShotStars.splice(i, 1);
+          continue;
+        }
+        const rect = { x: s.x, y: s.y, w: s.size, h: s.size };
+        if (rectHit(player, rect)) {
+          doubleShotActive = true;
+          doubleShotStars.splice(i, 1);
           playSound(starSound);
         }
       }
@@ -1475,9 +1529,15 @@
       ctx.fillStyle = "#fff";
       ctx.font = "18px sans-serif";
       ctx.fillText("SCORE: " + score, 10, 24);
+      let uiY = 48;
       if (doubleShotActive && score < 1800) {
         ctx.font = "14px sans-serif";
-        ctx.fillText("DOUBLE SHOT ACTIVE", 10, 48);
+        ctx.fillText("TRIPLE SHOT!", 10, uiY);
+        uiY += 20;
+      }
+      if (doubleShotActive && score < doubleShotEndScore) {
+        ctx.font = "14px sans-serif";
+        ctx.fillText(`DOUBLE SHOT ACTIVE (< ${doubleShotEndScore})`, 10, uiY);
       }
     }
 
@@ -1498,8 +1558,53 @@
         const cx = s.x + s.size / 2;
         const cy = s.y + s.size / 2;
         const r  = s.size / 2;
-
         const blinkOn = Math.floor(frameCount / 10) % 2 === 0;
+        ctx.fillStyle = blinkOn ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)";
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const ang  = (Math.PI * 2 / 5) * i - Math.PI / 2;
+          const ang2 = ang + Math.PI / 5;
+          const r1 = r;
+          const r2 = r * 0.4;
+          if (i === 0) ctx.moveTo(cx + Math.cos(ang) * r1, cy + Math.sin(ang) * r1);
+          ctx.lineTo(cx + Math.cos(ang) * r1,  cy + Math.sin(ang) * r1);
+          ctx.lineTo(cx + Math.cos(ang2) * r2, cy + Math.sin(ang2) * r2);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    function drawDoubleShotStars() {
+      for (const s of doubleShotStars) {
+        const cx = s.x + s.size / 2;
+        const cy = s.y + s.size / 2;
+        const r  = s.size / 2;
+
+    function drawDoubleShotStars() {
+      for (const s of doubleShotStars) {
+        const cx = s.x + s.size / 2;
+        const cy = s.y + s.size / 2;
+        const r  = s.size / 2;
+
+        const blinkOn = Math.floor(frameCount / 8) % 2 === 0;
+        ctx.fillStyle = blinkOn ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)";
+
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const ang  = (Math.PI * 2 / 5) * i - Math.PI / 2;
+          const ang2 = ang + Math.PI / 5;
+          const r1 = r;
+          const r2 = r * 0.4;
+          if (i === 0) ctx.moveTo(cx + Math.cos(ang) * r1, cy + Math.sin(ang) * r1);
+          ctx.lineTo(cx + Math.cos(ang) * r1,  cy + Math.sin(ang) * r1);
+          ctx.lineTo(cx + Math.cos(ang2) * r2, cy + Math.sin(ang2) * r2);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
         ctx.fillStyle = blinkOn ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)";
         ctx.beginPath();
         for (let i = 0; i < 5; i++) {
@@ -1607,6 +1712,7 @@ function drawClearExplosionPhase() {
     function resetScoreFlags() {
       for (const k in missileSpawned) delete missileSpawned[k];
       for (const k in starSpawned) delete starSpawned[k];
+      for (const k in doubleShotStarSpawned) delete doubleShotStarSpawned[k];
     }
 
     function startGame() {
@@ -1615,7 +1721,10 @@ function drawClearExplosionPhase() {
       enemyBullets.length = 0;
       explosions.length = 0;
       powerStars.length = 0;
+      doubleShotStars.length = 0;
       resetScoreFlags();
+      powerUpActive = false;
+      powerUpTimer  = 0;
       doubleShotActive = false;
 
       score = 0;
@@ -1711,6 +1820,7 @@ function drawClearExplosionPhase() {
           updateEnemyBullets();
           updateEnemies();
           updateStarsPower();
+          updateDoubleShotStars();
           handleCollisions();
           updateExplosions();
 
@@ -1721,6 +1831,7 @@ function drawClearExplosionPhase() {
           drawEnemies();
           drawExplosions();
           drawStarsPower();
+          drawDoubleShotStars();
           drawUI();
         } else {
           updateExplosions();
