@@ -11,5 +11,6 @@
 * 1より難易度はややUP。
 * ゲームオーバー画面からのリスタートにコントローラーのボタン使用可に変更（従来はPCキーボードのRのみ）。
 
-<img width="677" height="796" alt="image" src="https://github.com/user-attachments/assets/8e271808-1b12-46fc-b6af-794df8312d8f" />
+<img width="200" height="260" alt="image" src="https://github.com/user-attachments/assets/8e271808-1b12-46fc-b6af-794df8312d8f" />
+
 
