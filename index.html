@@ -229,8 +229,8 @@
     let clearFlashTimer = 0; // >0 の間、白く点滅
 
     const missileScorePoints = [500, 600, 700, 800, 900, 1000];
-    const starScorePoints         = [1000];
-    const doubleShotStarPoints    = [1450];
+    const starScorePoints         = [1000,1300];
+    const doubleShotStarPoints    = [1500];
     const doubleShotEndScore      = 1800;
     const missileSpawned = {};
     const starSpawned    = {};
@@ -1083,7 +1083,8 @@
         }
         const rect = { x: s.x, y: s.y, w: s.size, h: s.size };
         if (rectHit(player, rect)) {
-          doubleShotActive = true;
+          powerUpActive = true;
+          powerUpTimer  = 60 * 8;   
           powerStars.splice(i, 1);
           playSound(starSound);
         }
@@ -1529,16 +1530,6 @@
       ctx.fillStyle = "#fff";
       ctx.font = "18px sans-serif";
       ctx.fillText("SCORE: " + score, 10, 24);
-      let uiY = 48;
-      if (doubleShotActive && score < 1800) {
-        ctx.font = "14px sans-serif";
-        ctx.fillText("TRIPLE SHOT!", 10, uiY);
-        uiY += 20;
-      }
-      if (doubleShotActive && score < doubleShotEndScore) {
-        ctx.font = "14px sans-serif";
-        ctx.fillText(`DOUBLE SHOT ACTIVE (< ${doubleShotEndScore})`, 10, uiY);
-      }
     }
 
     function drawGameOver() {
@@ -1581,12 +1572,6 @@
         const cy = s.y + s.size / 2;
         const r  = s.size / 2;
 
-    function drawDoubleShotStars() {
-      for (const s of doubleShotStars) {
-        const cx = s.x + s.size / 2;
-        const cy = s.y + s.size / 2;
-        const r  = s.size / 2;
-
         const blinkOn = Math.floor(frameCount / 8) % 2 === 0;
         ctx.fillStyle = blinkOn ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)";
 
@@ -1604,23 +1589,6 @@
         ctx.fill();
       }
     }
-
-        ctx.fillStyle = blinkOn ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)";
-        ctx.beginPath();
-        for (let i = 0; i < 5; i++) {
-          const ang  = (Math.PI * 2 / 5) * i - Math.PI / 2;
-          const ang2 = ang + Math.PI / 5;
-          const r1 = r;
-          const r2 = r * 0.4;
-          if (i === 0) ctx.moveTo(cx + Math.cos(ang) * r1, cy + Math.sin(ang) * r1);
-          ctx.lineTo(cx + Math.cos(ang) * r1,  cy + Math.sin(ang) * r1);
-          ctx.lineTo(cx + Math.cos(ang2) * r2, cy + Math.sin(ang2) * r2);
-        }
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-
     // ===== クリア演出 =====
     function drawClearScreen() {
       if (endingImageLoaded) {
@@ -1787,68 +1755,73 @@ function drawClearExplosionPhase() {
     function loop() {
       frameCount++;
 
-      const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-      const pad0 = (activeGamepadIndex != null) ? pads[activeGamepadIndex] : pads[0];
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+  try {
+    // ===== ここから今の loop の中身を全部入れる（既存処理そのまま） =====
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    const pad0 = (activeGamepadIndex != null) ? pads[activeGamepadIndex] : pads[0];
 
-      if (clearPhase === 1) {
-        updateClearExplosionPhase();
-        drawClearExplosionPhase();
-      } else if (clearPhase === 2) {
-        updateCruisePhase();
-        drawCruisePhase();
-      } else if (clearPhase === 3) {
-        drawClearScreen();
-      } else if (!gameStarted) {
-        // タイトル画面
-        drawTitleScreen();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // パッドでも最初のボタンでスタート＆BGM解除
-        if (pad0 && pad0.buttons) {
-          const anyPressed = pad0.buttons.some(b => b.pressed);
-          if (anyPressed) {
-            unlockBgm();
-            startGame();
-          }
-        }
-      } else {
-        // ゲーム進行
-        if (!gameOver) {
-          updatePlayer();
-          updateBullets();
-          updateEnemyBullets();
-          updateEnemies();
-          updateStarsPower();
-          updateDoubleShotStars();
-          handleCollisions();
-          updateExplosions();
-
-          drawPlayer();
-          drawBullets();
-          drawEnemyBullets();
-          drawEnemyTrails();
-          drawEnemies();
-          drawExplosions();
-          drawStarsPower();
-          drawDoubleShotStars();
-          drawUI();
-        } else {
-          updateExplosions();
-          drawPlayer();
-          drawBullets();
-          drawEnemyBullets();
-          drawEnemyTrails();
-          drawEnemies();
-          drawExplosions();
-          drawUI();
-          drawGameOver();
+    if (clearPhase === 1) {
+      updateClearExplosionPhase();
+      drawClearExplosionPhase();
+    } else if (clearPhase === 2) {
+      updateCruisePhase();
+      drawCruisePhase();
+    } else if (clearPhase === 3) {
+      drawClearScreen();
+    } else if (!gameStarted) {
+      drawTitleScreen();
+      if (pad0 && pad0.buttons) {
+        const anyPressed = pad0.buttons.some(b => b.pressed);
+        if (anyPressed) {
+          unlockBgm();
+          startGame();
         }
       }
+    } else {
+      if (!gameOver) {
+        updatePlayer();
+        updateBullets();
+        updateEnemyBullets();
+        updateEnemies();
+        updateStarsPower();
+        updateDoubleShotStars();
+        handleCollisions();
+        updateExplosions();
 
-      requestAnimationFrame(loop);
+        drawPlayer();
+        drawBullets();
+        drawEnemyBullets();
+        drawEnemyTrails();
+        drawEnemies();
+        drawExplosions();
+        drawStarsPower();
+        drawDoubleShotStars();
+        drawUI();
+      } else {
+        updateExplosions();
+        drawPlayer();
+        drawBullets();
+        drawEnemyBullets();
+        drawEnemyTrails();
+        drawEnemies();
+        drawExplosions();
+        drawUI();
+        drawGameOver();
+      }
     }
+    // ===== ここまで =====
 
+    lastError = null;
+  } catch (e) {
+    lastError = e;
+
+  }
+
+  requestAnimationFrame(loop);
+}
     loop();
   </script>
 </body>
