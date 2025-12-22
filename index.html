@@ -800,10 +800,10 @@
     }
 
     function fireFinalBossBullets(boss) {
-      const speed = 6;
+      const speed = 6*1.5;
       const angle = Math.PI / 6;
 
-      // 虫ボス：中央下寄りから発射
+        // 大ボス：中央下寄りから
       const cx = boss.x + boss.w * 0.5;
       const cy = boss.y + boss.h * 0.78;
 
