@@ -844,7 +844,7 @@
       if (player.fireCooldown > 0) player.fireCooldown--;
 
       const wantShootKeyboard = keys["Space"] || keys["KeyJ"];
-      const wantShootPad = pad && pad2.shoot;
+      const wantShootPad = pad && pad.shoot;
 
       if ((wantShootKeyboard || wantShootPad) && player.fireCooldown === 0) {
         firePlayerShots();
