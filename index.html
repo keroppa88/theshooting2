@@ -94,6 +94,24 @@
       }
     }
 
+    // ===== スクロール背景画像 =====
+    const backgroundImage = new Image();
+    backgroundImage.src = "Game/back.png";
+    let backgroundImageLoaded = false;
+    let backgroundScrollTriggered = false;
+    let backgroundScrollPending = false;
+    let backgroundScrollActive = false;
+    let backgroundScrollY = 0;
+    const backgroundScrollSpeed = 0.8;
+    const backgroundScrollScore = 1150;
+
+    backgroundImage.onload = () => {
+      backgroundImageLoaded = true;
+      if (backgroundScrollPending) {
+        startBackgroundScroll();
+      }
+    };
+
     // ===== エンディング画像 =====
     const endingImage = new Image();
     endingImage.src = "Game/last.jpg";
@@ -223,10 +241,20 @@
     let clearExplosionX = canvas.width / 2;
     let clearExplosionY = canvas.height / 2;
 
+    // 直近のエラーを保持（デバッグ用途。未宣言のまま使われないよう初期化）
+    let lastError = null;
+
+
     // 大ボス専用・15重リング爆発
     let finalBigExplosion = null;
     // 爆発終了後の白フラッシュ
     let clearFlashTimer = 0; // >0 の間、白く点滅
+
+    function startBackgroundScroll() {
+      backgroundScrollY = -canvas.height;
+      backgroundScrollActive = true;
+      backgroundScrollPending = false;
+    }
 
     const missileScorePoints = [500, 600, 700, 800, 900, 1000];
     const starScorePoints         = [1000,1300];
@@ -1428,6 +1456,31 @@
     }
 
 
+    function updateBackgroundScroll() {
+      if (!backgroundScrollTriggered && score >= backgroundScrollScore) {
+        backgroundScrollTriggered = true;
+        if (backgroundImageLoaded) {
+          startBackgroundScroll();
+        } else {
+          backgroundScrollPending = true;
+        }
+      }
+
+      if (!backgroundScrollActive) return;
+
+      backgroundScrollY += backgroundScrollSpeed;
+      if (backgroundScrollY >= canvas.height) {
+        backgroundScrollActive = false;
+      }
+    }
+
+    function drawBackgroundScroll() {
+      if (!backgroundScrollActive || !backgroundImageLoaded) return;
+      ctx.drawImage(backgroundImage, 0, backgroundScrollY, canvas.width, canvas.height);
+    }
+
+
+
     function drawEnemies() {
       for (const e of enemies) {
         ctx.save();
@@ -1715,6 +1768,11 @@ function drawClearExplosionPhase() {
       clearFrame = 0;
       finalBigExplosion = null;
       clearFlashTimer = 0;
+
+      backgroundScrollTriggered = false;
+      backgroundScrollPending = false;
+      backgroundScrollActive = false;
+      backgroundScrollY = -canvas.height;
     }
 
     function backToTitle() {
@@ -1743,6 +1801,11 @@ function drawClearExplosionPhase() {
       finalBigExplosion = null;
       clearFlashTimer = 0;
 
+      backgroundScrollTriggered = false;
+      backgroundScrollPending = false;
+      backgroundScrollActive = false;
+      backgroundScrollY = -canvas.height;
+
       gameStarted = false;
       gameOver = false;
       gameCleared = false;
@@ -1761,6 +1824,9 @@ function drawClearExplosionPhase() {
     const pad0 = (activeGamepadIndex != null) ? pads[activeGamepadIndex] : pads[0];
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    updateBackgroundScroll();
+    drawBackgroundScroll();
 
     if (clearPhase === 1) {
       updateClearExplosionPhase();
