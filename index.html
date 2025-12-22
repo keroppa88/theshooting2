@@ -123,7 +123,7 @@
 
     const backgroundScrolls = [
       createBackgroundScroll("Game/back.png", 1250),
-      createBackgroundScroll("Game/back2.png", 1750),
+      createBackgroundScroll("Game/back2.png", 1650),
     ];
 
     // ===== エンディング画像 =====
@@ -325,6 +325,22 @@
     window.addEventListener("gamepaddisconnected", e => {
       if (activeGamepadIndex === e.gamepad.index) activeGamepadIndex = null;
     });
+
+    const restartGamepadButtons = [0, 1, 2, 3, 9]; // ABXY + START
+    let prevGamepadButtons = [];
+
+    function isGamepadRestartJustPressed(gp) {
+      if (!gp || !gp.buttons) {
+        prevGamepadButtons = [];
+        return false;
+      }
+
+      const nextButtons = gp.buttons.map(b => !!(b && b.pressed));
+      const pressed = restartGamepadButtons.some(idx => nextButtons[idx] && !prevGamepadButtons[idx]);
+
+      prevGamepadButtons = nextButtons;
+      return pressed;
+    }
 
     function readGamepad() {
       if (!navigator.getGamepads) return null;
@@ -1399,10 +1415,6 @@
         ctx.fillRect(s.x, s.y, s.size, s.size);
       }
 
-      ctx.fillStyle = "#444";
-      ctx.fillRect(0, 60,  canvas.width, 2);
-      ctx.fillRect(0, 580, canvas.width, 2);
-
       ctx.fillStyle = "#00ffff";
       ctx.textAlign = "center";
       ctx.font = "40px monospace";
@@ -1617,8 +1629,8 @@
       ctx.font = "32px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 10);
-      ctx.font = "20px sans-serif";
-      ctx.fillText("Rキーでリスタート", canvas.width / 2, canvas.height / 2 + 30);
+      ctx.font = "12px sans-serif";
+      ctx.fillText("Rキーorゲームパッドの各ボタンでリスタート", canvas.width / 2, canvas.height / 2 + 30);
       ctx.textAlign = "left";
     }
 
@@ -1843,6 +1855,8 @@ function drawClearExplosionPhase() {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     const pad0 = (activeGamepadIndex != null) ? pads[activeGamepadIndex] : pads[0];
 
+    const restartByGamepad = isGamepadRestartJustPressed(pad0);
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     updateBackgroundScroll();
@@ -1866,6 +1880,10 @@ function drawClearExplosionPhase() {
         }
       }
     } else {
+      if (!gameCleared && gameOver && restartByGamepad) {
+        startGame();
+      }
+
       if (!gameOver) {
         updatePlayer();
         updateBullets();
