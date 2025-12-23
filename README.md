@@ -12,8 +12,10 @@
 * ゲームオーバー画面からのリスタートにコントローラーのボタン使用可。
 
 <img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/63a564ba-cee1-4ad9-9254-3e5585785576" />
-<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/a4c080ba-fca3-4ec1-8baa-8605701a1714" />
 <img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/bb785cd0-faf3-43c2-8a58-ab1d8f4bc141" />
+<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/949e55f2-220a-470d-8820-d504028ec77d" />
+<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/bc10bd11-5092-4f47-816c-3f6a81cdf025" />
+
 
 
 
