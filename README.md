@@ -11,9 +11,10 @@
 * 1より難易度はややUP。
 * ゲームオーバー画面からのリスタートにコントローラーのボタン使用可。
 
+<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/63a564ba-cee1-4ad9-9254-3e5585785576" />
+<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/a4c080ba-fca3-4ec1-8baa-8605701a1714" />
+<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/bb785cd0-faf3-43c2-8a58-ab1d8f4bc141" />
 
-<img width="300" height="280" alt="image" src="https://github.com/user-attachments/assets/a4c080ba-fca3-4ec1-8baa-8605701a1714" />
-<img width="300" height="300" alt="image" src="https://github.com/user-attachments/assets/bb785cd0-faf3-43c2-8a58-ab1d8f4bc141" />
 
 
 
