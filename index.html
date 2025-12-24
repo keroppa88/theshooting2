@@ -688,7 +688,16 @@ const backgroundScrolls = [
 
     function checkBossSpawn() {
       if (finalMode) return;
+
       while (score >= nextBossScore) {
+
+    // ★ 1200点は中ボス出現なし
+        if (nextBossScore === 1200) {
+          nextBossScore += 300;
+          continue;
+        }
+
+
         if (nextBossScore === 1500) {
           spawnBossPair();
         } else {
