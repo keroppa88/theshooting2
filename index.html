@@ -134,7 +134,7 @@ const backgroundScrolls = [
           pending: false,
           active: false,
           y: -canvas.height,
-          triggerScore: 1250,
+          triggerScore: 1300,
           frameInterval: 12,
         };
 
@@ -998,8 +998,8 @@ const backgroundScrolls = [
 
         // ①軌跡：直進通常敵（spawnEnemyで生成される敵）は全て軌跡を描くため、個別スポーンは不要
 
-        // ③頑丈な敵：score>500 で稼働
-        if (score > 500) {
+        // ③頑丈な敵：score500~1700で稼働
+        if (score > 500 && score < 1650) {
           hardTwinSpawnTimer--;
           if (hardTwinSpawnTimer <= 0) {
             spawnHardTwin();
