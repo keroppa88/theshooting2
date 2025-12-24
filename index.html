@@ -96,7 +96,7 @@
 
     // ===== スクロール背景画像 =====
 
-    const backgroundScrollSpeed = 0.8;
+    const backgroundScrollSpeed = 0.9;
 
     function createBackgroundScroll(src, triggerScore) {
       const image = new Image();
@@ -121,11 +121,41 @@
       return state;
     }
 
-    const backgroundScrolls = [
-      createBackgroundScroll("Game/back.png", 1050),
-      createBackgroundScroll("Game/back2.png", 1600),
-    ];
+const backgroundScrolls = [
+  createBackgroundScroll("Game/back2.png", 1650),
 
+      // back2だけ2コマ特例（createBackgroundScrollを使わない）
+      (() => {
+        const bg = {
+          frames: [new Image(), new Image()],
+          loadedCount: 0,
+          loaded: false,
+          triggered: false,
+          pending: false,
+          active: false,
+          y: -canvas.height,
+          triggerScore: 1050,
+          frameInterval: 12,
+        };
+
+        const onload = () => {
+          bg.loadedCount++;
+          if (bg.loadedCount >= 2) {
+            bg.loaded = true;
+            if (bg.pending) startBackgroundScroll(bg);
+          }
+        };
+
+        // ★先にonloadを付ける（ここが重要）
+        bg.frames[0].onload = onload;
+        bg.frames[1].onload = onload;
+
+        bg.frames[0].src = "Game/back2_0.png";
+        bg.frames[1].src = "Game/back2_1.png";
+
+        return bg;
+      })(),
+    ];
     // ===== エンディング画像 =====
     const endingImage = new Image();
     endingImage.src = "Game/last.jpg";
@@ -1513,10 +1543,15 @@
     function drawBackgroundScroll() {
       for (const bg of backgroundScrolls) {
         if (!bg.active || !bg.loaded) continue;
-        ctx.drawImage(bg.image, 0, bg.y, canvas.width, canvas.height);
+
+        // back2特例：framesがあるときは交互に描く
+        const img = (bg.frames && bg.frames.length)
+          ? bg.frames[(Math.floor(frameCount / bg.frameInterval) % bg.frames.length)]
+          : bg.image;
+
+        ctx.drawImage(img, 0, bg.y, canvas.width, canvas.height);
       }
     }
-
 
 
     function drawEnemies() {
